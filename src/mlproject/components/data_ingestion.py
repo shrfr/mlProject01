@@ -11,11 +11,15 @@ from sklearn.model_selection import train_test_split
 
 from dataclasses import dataclass
 
+
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+ARTIFACTS_DIR = os.path.join(PROJECT_ROOT, "artifacts")
+
 @dataclass
 class DataIngestionConfig:
-    train_data_path:str=os.path.join('artifacts','train.csv')
-    test_data_path:str=os.path.join('artifacts','test.csv')
-    raw_data_path:str=os.path.join('artifacts','raw.csv')
+    train_data_path:str=os.path.join(ARTIFACTS_DIR,'train.csv')
+    test_data_path:str=os.path.join(ARTIFACTS_DIR,'test.csv')
+    raw_data_path:str=os.path.join(ARTIFACTS_DIR,'raw.csv')
 
 class DataIngestion:
     def __init__(self):
@@ -23,22 +27,27 @@ class DataIngestion:
 
     def initiate_data_ingestion(self):
         try:
-            os.makedirs(os.path.dirname(self.ingestion_config.train_data_path),exist_ok=True)
-            ##reading data from mysql database
-            df=read_sql_data()
-            logging.info("Reading from mysql database")
+            os.makedirs(os.path.dirname(self.ingestion_config.train_data_path), exist_ok=True)
 
-            df.to_csv(self.ingestion_config.raw_data_path,index=False,header=True)
-            train_set,test_set=train_test_split(df,test_size=0.2,random_state=42)
+            # ✅ Absolute path (safe)
+            data_path = os.path.join(PROJECT_ROOT, 'notebook', 'data', 'raw.csv')
+            df = pd.read_csv(data_path)
 
-            train_set.to_csv(self.ingestion_config.train_data_path,index=False,header=True)
-            test_set.to_csv(self.ingestion_config.test_data_path,index=False,header=True)
+            logging.info("Reading dataset from CSV file")
+
+            df.to_csv(self.ingestion_config.raw_data_path, index=False, header=True)
+
+            train_set, test_set = train_test_split(df, test_size=0.2, random_state=42)
+
+            train_set.to_csv(self.ingestion_config.train_data_path, index=False, header=True)
+            test_set.to_csv(self.ingestion_config.test_data_path, index=False, header=True)
 
             logging.info("Data ingestion is completed")
 
-            return(
+            return (
                 self.ingestion_config.train_data_path,
                 self.ingestion_config.test_data_path
             )
+
         except Exception as e:
-            raise CustomException(e,sys)
+            raise CustomException(e, sys)
